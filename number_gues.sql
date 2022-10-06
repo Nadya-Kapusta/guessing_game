@@ -44,24 +44,33 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: userbase; Type: TABLE; Schema: public; Owner: freecodecamp
+-- Name: user_games; Type: TABLE; Schema: public; Owner: freecodecamp
 --
 
-CREATE TABLE public.userbase (
-    username character varying(30),
-    games_played integer,
+CREATE TABLE public.user_games (
+    username character varying(44) NOT NULL,
+    user_games integer,
     best_game integer
 );
 
 
-ALTER TABLE public.userbase OWNER TO freecodecamp;
+ALTER TABLE public.user_games OWNER TO freecodecamp;
 
 --
--- Data for Name: userbase; Type: TABLE DATA; Schema: public; Owner: freecodecamp
+-- Data for Name: user_games; Type: TABLE DATA; Schema: public; Owner: freecodecamp
 --
 
+
+
+--
+-- Name: user_games user_games_username_key; Type: CONSTRAINT; Schema: public; Owner: freecodecamp
+--
+
+ALTER TABLE ONLY public.user_games
+    ADD CONSTRAINT user_games_username_key UNIQUE (username);
 
 
 --
 -- PostgreSQL database dump complete
 --
+
