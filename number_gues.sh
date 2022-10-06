@@ -1,31 +1,23 @@
 #!/bin/bash
-#chmod +x      execute permission
 
 PSQL="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
-read -p "Enter your username:" input
+read -p "Enter your username:" USER_NAME
 #  -p prompt output the string PROMPT without a trailing newline before
 #        attempting to read
 
-#len=${#input}
-#echo $len
-#while (($len<22));
-#do
-#  read -p "Your username should have at least 22 characters: " input
-#  len=${#input}
-#done
+username=$($PSQL "SELECT username FROM user_games WHERE username = '$USER_NAME'")
 
-db_check=$($PSQL "select username from userbase where username = '$input'")
-
-
-if  [[ $db_check != $input ]]; then 
-  ($PSQL "insert into userbase (username, games_played) values ('$input', 0, 0)")
-  echo "Welcome, $input! It looks like this is your first time here." 
+if [[ -z $username ]]
+then 
+  username=$USER_NAME
+  ($PSQL "insert into user_games (username, games_played, best_game) values ('$username', 0, 0)")
+  echo "Welcome, $username! It looks like this is your first time here." 
   best_game=0
 else 
-  games_played=$($PSQL "select games_played from userbase where username = '$input'")
-  best_game=$($PSQL "select best_game from userbase where username = '$input'")
-  echo Welcome back, $input! You have played $games_played games, and your best game took $best_game guesses.
-fi
+  games_played=$($PSQL "select games_played from user_games where username = '$username'")
+  best_game=$($PSQL "select best_game from user_games where username = '$username'")
+  echo Welcome back, $username! You have played $games_played games, and your best game took $best_game guesses.
+  fi
 
 random_number=$[ $RANDOM % 1000 + 0 ]
 count=0
@@ -40,15 +32,19 @@ do
         continue
    fi
    let "count+=1" 
-   if [ $input_number -gt $random_number ]; then 
-    read -p "It's lower than that, guess again: " input_number
-   elif [ $input_number -lt $random_number ]; then  read -p "It's higher than that, guess again: " input_number
-   elif [ $input_number -eq $random_number ]; then 
+   if [ $input_number -gt $random_number ]; 
+    then 
+      read -p "It's lower than that, guess again: " input_number
+    elif [ $input_number -lt $random_number ]; 
+      then  
+        read -p "It's higher than that, guess again: " input_number
+    elif [ $input_number -eq $random_number ]; then 
         echo "You guessed it in $count tries. The secret number was $random_number. Nice job!"
         let "games_played+=1" 
-        if (($best_game==0)) || (($best_game>$count)); then
-          ($PSQL "update userbase set best_game=$count, games_played=$games_played where username = '$input'")
-        else ($PSQL "update userbase set games_played=$games_played where username = '$input'")
+        if (($best_game==0)) || (($best_game>$count)); 
+          then
+            ($PSQL "update user_games set best_game=$count, games_played=$games_played where username = '$username'")
+          else ($PSQL "update user_games set games_played=$games_played where username = '$username'")
         fi
         break
    fi
