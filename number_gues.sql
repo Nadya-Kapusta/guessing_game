@@ -49,7 +49,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.user_games (
     username character varying(44) NOT NULL,
-    user_games integer,
+    games_played integer,
     best_game integer
 );
 
