@@ -1,53 +1,59 @@
 #!/bin/bash
 
 PSQL="psql --username=freecodecamp --dbname=number_guess -t --no-align -c"
-read -p "Enter your username:" USER_NAME
-#  -p prompt output the string PROMPT without a trailing newline before
-#        attempting to read
+
+echo "Enter your username:"
+read USER_NAME
 
 username=$($PSQL "SELECT username FROM user_games WHERE username = '$USER_NAME'")
 
-if [[ -z $username ]]
-then 
-  username=$USER_NAME
-  ($PSQL "insert into user_games (username, games_played, best_game) values ('$username', 0, 0)")
-  echo "Welcome, $username! It looks like this is your first time here." 
-  best_game=0
-else 
-  games_played=$($PSQL "select games_played from user_games where username = '$username'")
-  best_game=$($PSQL "select best_game from user_games where username = '$username'")
-  echo Welcome back, $username! You have played $games_played games, and your best game took $best_game guesses.
-  fi
+if [[ -z $username ]] 
+  then
+    echo "Welcome, $USER_NAME! It looks like this is your first time here." 
+    insert=$($PSQL "insert into user_games (username, games_played, best_game) values ('$USER_NAME', 0, 0)")
+    games_played=0
+    best_game=0
+  else
+    games_played=$($PSQL "SELECT games_played FROM user_games WHERE username = '$USER_NAME'")
+    best_game=$($PSQL "SELECT best_game FROM user_games WHERE username = '$USER_NAME'")
+    echo "Welcome back, $USER_NAME! You have played $games_played games, and your best game took $best_game guesses."
+fi
 
-random_number=$[ $RANDOM % 1000 + 0 ]
-count=0
+RAN_NUM=$[ $RANDOM % 1000 + 0 ]
 
-echo $random_number 
-read -p "Guess the secret number between 1 and 1000: " input_number
-re='^[0-9]+$' #numner
+# echo $RAN_NUM 
 
-while :
+echo "Guess the secret number between 1 and 1000:"
+
+GUESS=1
+while read input_number
 do
-   if ! [[ $input_number =~ $re ]]; then read -p "That is not an integer, guess again: " input_number
-        continue
-   fi
-   let "count+=1" 
-   if [ $input_number -gt $random_number ]; 
+  # GUESS=$((GUESS+1))
+  if  [[ $input_number =~ ^[0-9]+$ ]];
     then 
-      read -p "It's lower than that, guess again: " input_number
-    elif [ $input_number -lt $random_number ]; 
-      then  
-        read -p "It's higher than that, guess again: " input_number
-    elif [ $input_number -eq $random_number ]; then 
-        echo "You guessed it in $count tries. The secret number was $random_number. Nice job!"
-        let "games_played+=1" 
-        if (($best_game==0)) || (($best_game>$count)); 
+      GUESS=$((GUESS+1))
+    if [ $input_number -eq $RAN_NUM ];
+      then
+        let "games_played+=1"   
+        echo "You guessed it in $((GUESS-1)) tries. The secret number was $RAN_NUM. Nice job!"
+        break;
+      else
+        if [ $input_number -lt $RAN_NUM ];
           then
-            ($PSQL "update user_games set best_game=$count, games_played=$games_played where username = '$username'")
-          else ($PSQL "update user_games set games_played=$games_played where username = '$username'")
+            echo "It's higher than that, guess again:" 
+        elif [ $input_number -gt $RAN_NUM ];
+          then
+             echo "It's lower than that, guess again:" 
         fi
-        break
-   fi
-
+    fi
+    else
+        echo "That is not an integer, guess again:" 
+  fi
 done
 
+if (($best_game==0)) || (($best_game>$GUESS)); 
+  then
+   ($PSQL "update user_games set best_game=$GUESS, games_played=$games_played where username = '$USER_NAME'")
+  else 
+    ($PSQL "update user_games set games_played=$games_played where username = '$USER_NAME'")
+fi    
